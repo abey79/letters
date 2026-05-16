@@ -24,10 +24,11 @@ def render(body_stl: str, outside_stl: str, out_png: str, mode: str) -> None:
 
     if mode == "cutaway":
         # Keep y >= -13 so the cut face passes through the front-row magnet
-        # pockets. Normal points outward from the discarded side.
-        plane = dict(normal=(0.0, -1.0, 0.0), origin=(0.0, -13.0, 0.0))
-        body = body.clip(**plane)
-        outside = outside.clip(**plane)
+        # pockets. `clip_closed_surface` caps the cut with a new face so the
+        # solid stays solid (vs `clip` which would leave an open hole).
+        kwargs = dict(normal=(0.0, 1.0, 0.0), origin=(0.0, -13.0, 0.0))
+        body = body.clip_closed_surface(**kwargs)
+        outside = outside.clip_closed_surface(**kwargs)
     elif mode != "preview":
         sys.exit(f"unknown mode: {mode!r}")
 
