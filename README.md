@@ -10,11 +10,11 @@ clean two-color flat top.
 
 - Standard Gridfinity 1×1 base (41.5 mm, R3.75, official profile) on the bottom.
 - Flat top with the letter raised at the original top plane and the background
-  recessed by `recess_depth` (default **0.6 mm = 3 layers at 0.2 mm**).
+  recessed by `color_layers × layer_height` (default **3 × 0.2 mm = 0.6 mm**).
 - Four 6×2 mm magnet pockets are embedded at the canonical Gridfinity corner
-  positions (±13 mm from center). A **2-layer (0.4 mm) ceiling** sits between
-  each magnet and the base bottom — bridges cleanly across the 6.5 mm hole and
-  keeps magnetic pull strong.
+  positions (±13 mm from center). A **`magnet_cover_layers × layer_height`**
+  ceiling (default **2 × 0.2 mm = 0.4 mm**) sits between each magnet and the
+  base bottom — bridges cleanly across the 6.5 mm hole and keeps the pull strong.
 
 ## Printing
 
@@ -47,13 +47,14 @@ workflow artifact.
 
 ## Tunables (top of `letter_tag.scad`)
 
-| Param          | Default                          | Notes                                                 |
-| -------------- | -------------------------------- | ----------------------------------------------------- |
-| `letter`       | `"A"`                            | Override with `-D 'letter="X"'`                       |
-| `font`         | `"Liberation Sans:style=Bold"`   | Any installed font                                    |
-| `letter_size`  | `28`                             | Cap-height target in mm                               |
-| `tile_height`  | `6`                              | Total thickness, base bottom → top face               |
-| `recess_depth` | `0.6`                            | Filament-swap height; 3× your layer height            |
-| `add_magnets`  | `true`                           | Embed 6×2 mm magnet pockets                           |
-| `magnet_d`     | `6.5`                            | Hole Ø — canonical loose fit (glue or just press in)  |
-| `magnet_ceiling` | `0.4`                          | Plastic between magnet and baseplate (2× layer height)|
+| Param                 | Default                          | Notes                                                 |
+| --------------------- | -------------------------------- | ----------------------------------------------------- |
+| `layer_height`        | `0.2`                            | Slicer layer height — drives the two derived dims     |
+| `letter`              | `"A"`                            | Override with `-D 'letter="X"'`                       |
+| `font`                | `"Liberation Sans:style=Bold"`   | Any installed font                                    |
+| `letter_size`         | `28`                             | Cap-height target in mm                               |
+| `color_layers`        | `3`                              | Letter-color layers → filament-swap z                 |
+| `tile_height`         | `6`                              | Total thickness, base bottom → top face               |
+| `add_magnets`         | `true`                           | Embed 6×2 mm magnet pockets                           |
+| `magnet_d`            | `6.5`                            | Hole Ø — canonical loose fit (glue or just press in)  |
+| `magnet_cover_layers` | `2`                              | Layers between magnet and baseplate                   |

@@ -1,37 +1,36 @@
 // Gridfinity-compatible 1x1 letter tag.
 //
 // Designed to be printed upside down (letter face on the build plate) with a
-// filament swap at z = recess_depth, producing a flat top:
-//   - The letter sits at the original top plane.
-//   - The background is recessed by recess_depth (default 0.6 mm = 3 layers at 0.2 mm).
-//   - Layers below the swap print only the letter shape -> letter color.
-//   - Layers above fill in the rest of the tile         -> background color.
+// filament swap producing a flat 2-color top, and four embedded 6x2 mm
+// magnets in the standard Gridfinity corner positions.
 //
-// Magnets (6 x 2 mm) are embedded in the four standard Gridfinity corner
-// positions and encapsulated by a 2-layer ceiling. Because we print upside
-// down, the pockets open *upward* during the print: add a second pause in
-// your slicer at z = tile_height - magnet_ceiling (= 5.6 mm with defaults),
-// drop the four magnets into the open holes, resume. The next layer bridges
-// 6.5 mm cleanly.
+// Two slicer pauses are needed (defaults shown for 0.2 mm layer height):
+//   z = 0.6 mm: filament swap, letter color -> background color
+//   z = 5.6 mm: drop a magnet into each of the 4 open holes
+// After the second resume the slicer bridges 6.5 mm and prints
+// magnet_cover_layers solid layers on top.
 //
 // Override `letter` from the command line:
 //   openscad -o A.stl -D 'letter="A"' letter_tag.scad
 
+/* [Print] */
+layer_height = 0.2;    // slicer layer height; everything important is in layers
+
 /* [Letter] */
-letter        = "A";
-font          = "Liberation Sans:style=Bold";
-letter_size   = 28;    // cap-height target in mm
+letter       = "A";
+font         = "Liberation Sans:style=Bold";
+letter_size  = 28;     // cap-height target in mm
+color_layers = 3;      // letter-color layers; recess depth = layer_height * this
 
 /* [Tile] */
-tile_height   = 6;     // total tile thickness, base bottom -> top face
-recess_depth  = 0.6;   // total height of the letter-color layers (e.g. 3 x 0.2 mm)
+tile_height  = 6;      // total tile thickness, base bottom -> top face
 
 /* [Magnets] */
-add_magnets    = true;
-magnet_d       = 6.5;  // hole diameter; canonical loose fit (glue) per kennetek
-magnet_h       = 2.0;  // 6 x 2 mm neodymium magnet thickness
-magnet_pos     = 13;   // center offset from tile center (= 8 mm from 42 mm grid edge)
-magnet_ceiling = 0.4;  // plastic between magnet and baseplate (2 layers @ 0.2 mm)
+add_magnets         = true;
+magnet_d            = 6.5;   // hole diameter; canonical loose fit (glue) per kennetek
+magnet_h            = 2.0;   // 6 x 2 mm neodymium magnet thickness
+magnet_pos          = 13;    // center offset from tile center (= 8 mm from 42 mm grid edge)
+magnet_cover_layers = 2;     // layers between magnet and baseplate
 
 /* [Gridfinity 1x1 base, official spec] */
 gf_outer      = 41.5;
@@ -40,6 +39,10 @@ gf_chamfer_lo = 0.8;
 gf_straight   = 1.8;
 gf_chamfer_hi = 2.15;
 gf_base_h     = gf_chamfer_lo + gf_straight + gf_chamfer_hi;   // 4.75
+
+// Derived
+recess_depth   = layer_height * color_layers;
+magnet_ceiling = layer_height * magnet_cover_layers;
 
 $fa = 2;
 $fs = 0.3;
