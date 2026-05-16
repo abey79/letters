@@ -1,11 +1,11 @@
 // Gridfinity-compatible 1x1 letter tag.
 //
 // Designed to be printed upside down (letter face on the build plate) with a
-// filament swap after the first layer, producing a perfectly flat top:
+// filament swap at z = recess_depth, producing a flat top:
 //   - The letter sits at the original top plane.
-//   - The background is recessed by exactly one layer (recess_depth, default 0.2 mm).
-//   - Layer 1 prints only the letter shape  -> letter color.
-//   - Layers 2+ fill in the rest of the tile -> background color.
+//   - The background is recessed by recess_depth (default 0.6 mm = 3 layers at 0.2 mm).
+//   - Layers below the swap print only the letter shape -> letter color.
+//   - Layers above fill in the rest of the tile         -> background color.
 //
 // Override `letter` from the command line:
 //   openscad -o A.stl -D 'letter="A"' letter_tag.scad
@@ -17,7 +17,7 @@ letter_size   = 28;    // cap-height target in mm
 
 /* [Tile] */
 tile_height   = 6;     // total tile thickness, base bottom -> top face
-recess_depth  = 0.2;   // must match your slicer's first layer height
+recess_depth  = 0.6;   // total height of the letter-color layers (e.g. 3 x 0.2 mm)
 
 /* [Gridfinity 1x1 base, official spec] */
 gf_outer      = 41.5;
