@@ -12,12 +12,13 @@ all:
     @echo "Rendering 26 letters with up to {{jobs}} parallel jobs..."
     @echo {{letters}} | tr ' ' '\n' | xargs -P{{jobs}} -I{} just one {}
 
-# Render a single letter (both parts): `just one A`
+# Render a single letter (both bodies in one 3MF): `just one A`
 one letter:
     @mkdir -p {{out}}
-    @echo "  {{letter}} -> {{out}}/letter_{{letter}}_{body,outside}.stl"
-    @{{openscad}} -q -o {{out}}/letter_{{letter}}_body.stl    -D 'letter="{{letter}}"' -D 'part="body"'    {{scad}}
-    @{{openscad}} -q -o {{out}}/letter_{{letter}}_outside.stl -D 'letter="{{letter}}"' -D 'part="outside"' {{scad}}
+    @echo "  {{letter}} -> {{out}}/letter_{{letter}}.3mf"
+    @{{openscad}} -q --enable=lazy-union -o {{out}}/letter_{{letter}}.3mf \
+        -O export-3mf/material-type=color \
+        -D 'letter="{{letter}}"' {{scad}}
 
 # Render a preview PNG of a single letter: `just preview A`
 preview letter:
