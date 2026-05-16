@@ -7,6 +7,13 @@
 //   - Layers below the swap print only the letter shape -> letter color.
 //   - Layers above fill in the rest of the tile         -> background color.
 //
+// Magnets (6 x 2 mm) are embedded in the four standard Gridfinity corner
+// positions and encapsulated by a 2-layer ceiling. Because we print upside
+// down, the pockets open *upward* during the print: add a second pause in
+// your slicer at z = tile_height - magnet_ceiling (= 5.6 mm with defaults),
+// drop the four magnets into the open holes, resume. The next layer bridges
+// 6.5 mm cleanly.
+//
 // Override `letter` from the command line:
 //   openscad -o A.stl -D 'letter="A"' letter_tag.scad
 
@@ -18,6 +25,13 @@ letter_size   = 28;    // cap-height target in mm
 /* [Tile] */
 tile_height   = 6;     // total tile thickness, base bottom -> top face
 recess_depth  = 0.6;   // total height of the letter-color layers (e.g. 3 x 0.2 mm)
+
+/* [Magnets] */
+add_magnets    = true;
+magnet_d       = 6.5;  // hole diameter; canonical loose fit (glue) per kennetek
+magnet_h       = 2.0;  // 6 x 2 mm neodymium magnet thickness
+magnet_pos     = 13;   // center offset from tile center (= 8 mm from 42 mm grid edge)
+magnet_ceiling = 0.4;  // plastic between magnet and baseplate (2 layers @ 0.2 mm)
 
 /* [Gridfinity 1x1 base, official spec] */
 gf_outer      = 41.5;
@@ -57,6 +71,14 @@ module gf_base() {
     }
 }
 
+module magnet_pockets() {
+    // Pockets are encapsulated: magnet_ceiling of solid plastic sits between
+    // the magnet and the base bottom (the face touching the baseplate).
+    for (sx = [-1, 1]) for (sy = [-1, 1])
+        translate([sx * magnet_pos, sy * magnet_pos, magnet_ceiling])
+            cylinder(h = magnet_h + 0.1, d = magnet_d);
+}
+
 module tile() {
     difference() {
         union() {
@@ -74,6 +96,7 @@ module tile() {
                     text(letter, size=letter_size, font=font,
                          halign="center", valign="center");
                 }
+        if (add_magnets) magnet_pockets();
     }
 }
 

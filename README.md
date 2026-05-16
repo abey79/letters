@@ -11,10 +11,25 @@ clean two-color flat top.
 - Standard Gridfinity 1×1 base (41.5 mm, R3.75, official profile) on the bottom.
 - Flat top with the letter raised at the original top plane and the background
   recessed by `recess_depth` (default **0.6 mm = 3 layers at 0.2 mm**).
-- Print the tile **letter face down on the build plate** and tell your slicer
-  to swap filament at `z = recess_depth`. Below the swap prints in the letter
-  color; above the swap fills the recess and the rest of the body in the
-  background color.
+- Four 6×2 mm magnet pockets are embedded at the canonical Gridfinity corner
+  positions (±13 mm from center). A **2-layer (0.4 mm) ceiling** sits between
+  each magnet and the base bottom — bridges cleanly across the 6.5 mm hole and
+  keeps magnetic pull strong.
+
+## Printing
+
+Print **letter face down on the build plate** at 0.2 mm layer height. You'll
+need two pauses in your slicer:
+
+| Pause z (mm) | Action                                                      |
+| ------------ | ----------------------------------------------------------- |
+| `0.6`        | Filament swap: letter color → background color              |
+| `5.6`        | Drop a 6×2 mm magnet into each of the four open holes       |
+
+After the second resume the slicer bridges the holes and prints two solid
+layers to encapsulate the magnets. Cross-section showing the embedded pockets:
+
+![cutaway](docs/cutaway.png)
 
 ## Render
 
@@ -38,4 +53,7 @@ workflow artifact.
 | `font`         | `"Liberation Sans:style=Bold"`   | Any installed font                                    |
 | `letter_size`  | `28`                             | Cap-height target in mm                               |
 | `tile_height`  | `6`                              | Total thickness, base bottom → top face               |
-| `recess_depth` | `0.6`                            | Must equal slicer swap height (3× layer height etc.)  |
+| `recess_depth` | `0.6`                            | Filament-swap height; 3× your layer height            |
+| `add_magnets`  | `true`                           | Embed 6×2 mm magnet pockets                           |
+| `magnet_d`     | `6.5`                            | Hole Ø — canonical loose fit (glue or just press in)  |
+| `magnet_ceiling` | `0.4`                          | Plastic between magnet and baseplate (2× layer height)|
