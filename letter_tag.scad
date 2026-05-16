@@ -1,20 +1,28 @@
 // Gridfinity-compatible 1x1 letter tag.
 //
-// Designed to be printed upside down (letter face on the build plate) with a
-// filament swap producing a flat 2-color top, and four embedded 6x2 mm
-// magnets in the standard Gridfinity corner positions.
+// Two-material design for a dual-extruder / IDEX printer. The top face is
+// perfectly flush: the `body` part contains the Gridfinity base, the letter
+// (extending to the top face), and the surrounding tile up to color_layers
+// below the top; the `outside` part is a thin cap that fills the top
+// color_layers around the letter. The two parts mate on coplanar surfaces,
+// so the slicer assigns each to a different extruder and prints them
+// simultaneously — no filament swap.
 //
-// Two slicer pauses are needed (defaults shown for 0.2 mm layer height):
-//   z = 0.6 mm: filament swap, letter color -> background color
-//   z = 5.6 mm: drop a magnet into each of the 4 open holes
-// After the second resume the slicer bridges 6.5 mm and prints
-// magnet_cover_layers solid layers on top.
+// Print upside down (top face on the build plate). The outside cap is laid
+// down first; the body continues above it. Four 6x2 mm magnets are embedded
+// in standard Gridfinity corner positions; pause at z = tile_height -
+// magnet_ceiling to drop them in, then resume to bridge over.
+//
+// Render both parts:
+//   openscad -o A_body.stl    -D 'letter="A"' -D 'part="body"'    letter_tag.scad
+//   openscad -o A_outside.stl -D 'letter="A"' -D 'part="outside"' letter_tag.scad
 //
 // Override `letter` from the command line:
 //   openscad -o A.stl -D 'letter="A"' letter_tag.scad
 
 /* [Print] */
 layer_height = 0.2;    // slicer layer height; everything important is in layers
+part         = "all";  // "all" (preview), "body", or "outside"
 
 /* [Letter] */
 letter       = "A";
@@ -82,25 +90,48 @@ module magnet_pockets() {
             cylinder(h = magnet_h + 0.1, d = magnet_d);
 }
 
-module tile() {
+module raw_tile() {
+    gf_base();
+    translate([0, 0, gf_base_h])
+        linear_extrude(tile_height - gf_base_h)
+            rounded_square(gf_outer, gf_outer_r);
+}
+
+// Top color_layers slab in the tile silhouette, with the letter cut out.
+// `extra` extends the top face upward for clean boolean subtraction.
+module outside_cap(extra=0) {
+    translate([0, 0, tile_height - recess_depth])
+        linear_extrude(recess_depth + extra)
+            difference() {
+                rounded_square(gf_outer, gf_outer_r);
+                text(letter, size=letter_size, font=font,
+                     halign="center", valign="center");
+            }
+}
+
+module body() {
     difference() {
-        union() {
-            gf_base();
-            translate([0, 0, gf_base_h])
-                linear_extrude(tile_height - gf_base_h)
-                    rounded_square(gf_outer, gf_outer_r);
-        }
-        // Carve the top: subtract a (big square) minus (letter), leaving
-        // the letter at full height and the rest recessed by recess_depth.
-        translate([0, 0, tile_height - recess_depth])
-            linear_extrude(recess_depth + 0.1)
-                difference() {
-                    square(gf_outer + 2, center=true);
-                    text(letter, size=letter_size, font=font,
-                         halign="center", valign="center");
-                }
+        raw_tile();
+        outside_cap(extra=0.1);
         if (add_magnets) magnet_pockets();
     }
 }
 
-tile();
+module outside() {
+    outside_cap();
+}
+
+// Preview-only colors; ignored by STL export.
+body_color    = "WhiteSmoke";
+outside_color = "Crimson";
+
+if (part == "all") {
+    color(body_color)    body();
+    color(outside_color) outside();
+} else if (part == "body") {
+    color(body_color) body();
+} else if (part == "outside") {
+    color(outside_color) outside();
+} else {
+    assert(false, str("Unknown part: ", part, " (expected \"all\", \"body\", or \"outside\")"));
+}
