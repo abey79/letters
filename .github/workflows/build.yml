@@ -12,10 +12,13 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Install just and fonts
+      - name: Install just, fonts, and OpenSCAD runtime deps
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends just fonts-liberation
+          sudo apt-get install -y --no-install-recommends \
+            just fonts-liberation \
+            libegl1 libgl1 libglu1-mesa libopengl0 \
+            libxkbcommon0 libxrender1 libxext6 libxi6 libfontconfig1
 
       - name: Install OpenSCAD snapshot (lazy-union needs >= 2024)
         run: |
