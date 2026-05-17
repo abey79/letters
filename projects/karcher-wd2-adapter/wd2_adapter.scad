@@ -25,8 +25,9 @@ slot_w           = 2.5;
 screw_d          = 3.4;    // M3 clearance
 nut_af           = 5.5;    // M3 hex across-flats
 nut_thk          = 2.4;
-boss_thk         = 8;      // radial extent of the boss (smaller = less protrusion)
+boss_thk         = 8;      // radial extent of the boss
 boss_w           = 10;     // tangential width
+boss_h           = 10;     // axial extent — short ear, not the full socket
 boss_overlap     = 3;      // deep enough to close the cube/cylinder tangent gap
 slot_inner_x     = -1;     // how far the slot reaches across the bore center;
                            //   negative = into the bore so the +X wall is fully
@@ -67,19 +68,19 @@ module bosses() {
     cz = tool_socket_len / 2;
     for (s = [-1, 1])
         translate([cx, s * (slot_w / 2 + boss_w / 2), cz])
-            cube([boss_thk, boss_w, tool_socket_len], center = true);
+            cube([boss_thk, boss_w, boss_h], center = true);
 }
 
 module clamp_cuts() {
     cx = tool_od / 2 - boss_overlap + boss_thk / 2;
     cz = tool_socket_len / 2;
 
-    // Slot: only the +X side. Runs from just past the bore center outward
-    // past the boss outer face. Z stops at the end of the tool socket so it
-    // doesn't bleed into the taper.
+    // Slot: only the +X side, only across the boss axial range. The cylinder
+    // wall above and below the ear stays intact, so suction-side leak path
+    // is limited to a 10 mm band.
     slot_x_out = tool_od / 2 + boss_thk + 1;
-    translate([slot_inner_x, -slot_w / 2, -0.1])
-        cube([slot_x_out - slot_inner_x, slot_w, tool_socket_len + 0.1]);
+    translate([slot_inner_x, -slot_w / 2, cz - boss_h / 2])
+        cube([slot_x_out - slot_inner_x, slot_w, boss_h]);
 
     // Screw clearance along Y
     translate([cx, 0, cz]) rotate([90, 0, 0])
