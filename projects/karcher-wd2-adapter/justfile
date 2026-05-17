@@ -1,0 +1,28 @@
+out := "build"
+scad := "wd2_adapter.scad"
+name := "wd2_adapter"
+openscad := env_var_or_default("OPENSCAD", `command -v openscad 2>/dev/null || command -v OpenSCAD 2>/dev/null || echo /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD`)
+
+default: all
+
+# Render printable artifacts (STL + 3MF).
+all: stl 3mf
+
+stl:
+    @mkdir -p {{out}}
+    @echo "  {{name}} -> {{out}}/{{name}}.stl"
+    @{{openscad}} -q -o {{out}}/{{name}}.stl {{scad}}
+
+3mf:
+    @mkdir -p {{out}}
+    @echo "  {{name}} -> {{out}}/{{name}}.3mf"
+    @{{openscad}} -q -o {{out}}/{{name}}.3mf {{scad}}
+
+# PNG preview (needs an X display when run locally).
+preview:
+    @mkdir -p {{out}}
+    @{{openscad}} -q -o {{out}}/{{name}}.png \
+        --imgsize=800,800 --colorscheme=Tomorrow {{scad}}
+
+clean:
+    rm -rf {{out}}
