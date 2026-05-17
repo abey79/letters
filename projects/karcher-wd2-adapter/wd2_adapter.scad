@@ -78,10 +78,13 @@ module clamp_cuts() {
     translate([cx, 0, cz]) rotate([90, 0, 0])
         cylinder(d = screw_d, h = tool_od * 2, center = true);
 
-    // Hex nut trap on -Y face, recessed 0.5mm
-    nut_y = -(slot_w / 2 + boss_w) + nut_thk / 2 + 0.5;
+    // Hex nut trap, opens to -Y face of the -Y boss. The cut starts 0.1mm
+    // outside the boss to guarantee a clean break-through and extends
+    // (nut_thk + 0.4) into the boss to capture the nut with a hair of slop.
+    nut_depth = nut_thk + 0.4;
+    nut_y = -(slot_w / 2 + boss_w) - 0.1 + nut_depth / 2;
     translate([cx, nut_y, cz]) rotate([90, 0, 0])
-        cylinder(d = nut_af / cos(30) + 0.3, h = nut_thk + 0.4,
+        cylinder(d = nut_af / cos(30) + 0.3, h = nut_depth,
                  $fn = 6, center = true);
 }
 

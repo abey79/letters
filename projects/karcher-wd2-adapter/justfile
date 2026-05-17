@@ -5,20 +5,22 @@ openscad := env_var_or_default("OPENSCAD", `command -v openscad 2>/dev/null || c
 
 default: all
 
-# Render printable artifacts (STL + 3MF).
-all: stl 3mf
-
-stl:
+# Render printable artifacts (STL + 3MF) into build/.
+all:
     @mkdir -p {{out}}
     @echo "  {{name}} -> {{out}}/{{name}}.stl"
     @{{openscad}} -q -o {{out}}/{{name}}.stl {{scad}}
-
-3mf:
-    @mkdir -p {{out}}
     @echo "  {{name}} -> {{out}}/{{name}}.3mf"
     @{{openscad}} -q -o {{out}}/{{name}}.3mf {{scad}}
 
-# PNG preview (needs an X display when run locally).
+# Render README images (preview + axial cutaway) via OpenSCAD + PyVista.
+docs:
+    @mkdir -p {{out}}/docs
+    @{{openscad}} -q -o {{out}}/docs/{{name}}.stl {{scad}}
+    @uv run docs/render.py {{out}}/docs/{{name}}.stl {{out}}/docs/preview.png preview
+    @uv run docs/render.py {{out}}/docs/{{name}}.stl {{out}}/docs/cutaway.png cutaway
+
+# Quick OpenSCAD PNG (needs an X display when run locally).
 preview:
     @mkdir -p {{out}}
     @{{openscad}} -q -o {{out}}/{{name}}.png \
