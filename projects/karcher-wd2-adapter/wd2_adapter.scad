@@ -25,7 +25,8 @@ slot_w           = 2.5;
 screw_d          = 3.4;    // M3 clearance
 nut_af           = 5.5;    // M3 hex across-flats
 nut_thk          = 2.4;
-boss_thk         = 8;      // radial extent of the boss
+boss_thk         = 12;     // radial extent — wide enough to clear the
+                           //   hex nut pocket from the cylinder OD
 boss_w           = 10;     // tangential width
 boss_h           = 10;     // axial extent — short ear, not the full socket
 boss_overlap     = 3;      // deep enough to close the cube/cylinder tangent gap
@@ -78,21 +79,24 @@ module bosses() {
 module clamp_cuts() {
     cx = tool_od / 2 - boss_overlap + boss_thk / 2;
 
-    // Slot: only the +X side, only across the boss axial range. The cylinder
-    // wall above the ear stays intact, so the suction-side leak path is
-    // limited to the boss_h band at the bottom of the socket.
+    // Slot: only the +X side. Runs the full tool-socket height (the boss
+    // only clamps the bottom 10 mm, but the wall slit extends up to the
+    // start of the conical transition — easier to print and lets the wall
+    // flex along its full length).
     slot_x_out = tool_od / 2 + boss_thk + 1;
-    translate([slot_inner_x, -slot_w / 2, boss_z_lo - 0.1])
-        cube([slot_x_out - slot_inner_x, slot_w, boss_h + 0.1]);
+    translate([slot_inner_x, -slot_w / 2, -0.1])
+        cube([slot_x_out - slot_inner_x, slot_w, tool_socket_len + 0.1]);
 
     // Screw clearance along Y
     translate([cx, 0, boss_cz]) rotate([90, 0, 0])
         cylinder(d = screw_d, h = tool_od * 2, center = true);
 
-    // Hex nut trap, opens to the -Y face of the -Y boss.
+    // Hex nut trap, opens to the -Y face of the -Y boss. Rotated 30° about
+    // the screw axis so the hex has a vertex at the top — the upper
+    // overhang becomes a 60°-from-vertical slope instead of a flat bridge.
     nut_depth = nut_thk + 0.4;
     nut_y = -(slot_w / 2 + boss_w) - 0.1 + nut_depth / 2;
-    translate([cx, nut_y, boss_cz]) rotate([90, 0, 0])
+    translate([cx, nut_y, boss_cz]) rotate([90, 0, 0]) rotate([0, 0, 30])
         cylinder(d = nut_af / cos(30) + 0.3, h = nut_depth,
                  $fn = 6, center = true);
 }
