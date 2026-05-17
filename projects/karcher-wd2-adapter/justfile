@@ -13,12 +13,14 @@ all:
     @echo "  {{name}} -> {{out}}/{{name}}.3mf"
     @{{openscad}} -q -o {{out}}/{{name}}.3mf {{scad}}
 
-# Render README images (preview + axial cutaway) via OpenSCAD + PyVista.
+# Render README images (preview + axial cutaway + through-boss cut) via
+# OpenSCAD + PyVista.
 docs:
     @mkdir -p {{out}}/docs
     @{{openscad}} -q -o {{out}}/docs/{{name}}.stl {{scad}}
     @uv run docs/render.py {{out}}/docs/{{name}}.stl {{out}}/docs/preview.png preview
     @uv run docs/render.py {{out}}/docs/{{name}}.stl {{out}}/docs/cutaway.png cutaway
+    @uv run docs/render.py {{out}}/docs/{{name}}.stl {{out}}/docs/boss.png    boss
 
 # Quick OpenSCAD PNG (needs an X display when run locally).
 preview:

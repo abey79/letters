@@ -2,12 +2,7 @@
 # requires-python = ">=3.10"
 # dependencies = ["pyvista"]
 # ///
-"""Render preview and axial-cutaway PNGs of the WD2 adapter.
-
-The cutaway clips the body with a vertical plane through the adapter's axis
-(normal = Y), capping the cut so the cross-section reads as a solid wall —
-you can see the bore profile, the press-fit taper, and the clamp slot.
-"""
+"""Render preview, axial-cutaway and through-boss PNGs of the WD2 adapter."""
 
 import sys
 
@@ -15,6 +10,10 @@ import pyvista as pv
 
 BODY_COLOR = "steelblue"
 WINDOW = (1200, 1200)
+
+# Z height of the boss centerline — pulled from wd2_adapter.scad so the
+# through-boss cut slices exactly through the screw axis.
+BOSS_CENTER_Z = 11.0
 
 
 def render(stl_path: str, out_png: str, mode: str) -> None:
@@ -27,32 +26,38 @@ def render(stl_path: str, out_png: str, mode: str) -> None:
             (140.0, -170.0, 90.0), (0.0, 0.0, 45.0), (0.0, 0.0, 1.0),
         ]
     elif mode == "cutaway":
-        # Half cut along the adapter axis: drop the camera-side half so the
-        # bore, the press-fit taper, the conical reducer, and the slot
-        # extending into the transition all read as a clean cross-section.
-        # clip_closed_surface keeps the half where (point · normal) >= 0,
-        # so normal=(0,1,0) keeps +Y and the cut face at y=0 faces the
-        # camera sitting at -Y.
+        # Axial cut at Y=0. Keep the -Y half (the side with the nut trap)
+        # so the cross-section shows the bore, the press-fit taper, the
+        # conical reducer AND the -Y boss with its hex nut pocket.
         mesh = mesh.clip_closed_surface(
-            normal=(0.0, 1.0, 0.0), origin=(0.0, 0.0, 0.0)
+            normal=(0.0, -1.0, 0.0), origin=(0.0, 0.0, 0.0)
         )
         p.camera_position = [
-            (35.0, -180.0, 70.0), (0.0, 0.0, 45.0), (0.0, 0.0, 1.0),
+            (35.0, 180.0, 70.0), (0.0, 0.0, 45.0), (0.0, 0.0, 1.0),
+        ]
+    elif mode == "boss":
+        # Horizontal cut through the boss centerline so the slot, the boss
+        # profile, the boss/cylinder junction, the screw bore and the hex
+        # nut trap all appear in one plan view. Centered on +X so the boss
+        # detail fills the frame.
+        mesh = mesh.clip_closed_surface(
+            normal=(0.0, 0.0, 1.0), origin=(0.0, 0.0, BOSS_CENTER_Z)
+        )
+        p.camera_position = [
+            (20.0, 0.0, 140.0), (20.0, 0.0, BOSS_CENTER_Z), (0.0, 1.0, 0.0),
         ]
     else:
         sys.exit(f"unknown mode: {mode!r}")
 
     p.add_mesh(mesh, color=BODY_COLOR, ambient=0.25, diffuse=0.75, specular=0.1)
 
-    # Lock orthographic framing wide enough that the whole 90 mm part fits
-    # with comfortable margin on all sides.
     p.enable_parallel_projection()
-    p.camera.parallel_scale = 80
+    p.camera.parallel_scale = 80 if mode != "boss" else 32
 
     p.screenshot(out_png, transparent_background=True)
 
 
 if __name__ == "__main__":
     if len(sys.argv) != 4:
-        sys.exit("usage: render.py <stl> <out.png> <preview|cutaway>")
+        sys.exit("usage: render.py <stl> <out.png> <preview|cutaway|boss>")
     render(*sys.argv[1:])

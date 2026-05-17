@@ -1,5 +1,7 @@
 // Kärcher WD2 hose -> 63mm tool vacuum adapter
-// Tool side: slotted with an M3 clamp screw
+// Tool side: split-ear clamp on the boss side, tightened with an M3 screw.
+//            The slot only cuts the +X half of the cylinder, so the -X wall
+//            acts as the hinge.
 // WD2 side:  press fit on the 34.3 -> 35.8 hose taper
 
 // ---- WD2 hose taper (measured) ----
@@ -20,13 +22,15 @@ transition_len   = 18;
 
 // ---- Clamp ----
 slot_w           = 2.5;
-slot_overshoot   = 4;      // slot reaches past socket into transition
 screw_d          = 3.4;    // M3 clearance
 nut_af           = 5.5;    // M3 hex across-flats
 nut_thk          = 2.4;
-boss_thk         = 10;     // radial extent of each boss
+boss_thk         = 8;      // radial extent of the boss (smaller = less protrusion)
 boss_w           = 10;     // tangential width
-boss_overlap     = 1;      // sinks into the cylinder
+boss_overlap     = 3;      // deep enough to close the cube/cylinder tangent gap
+slot_inner_x     = -1;     // how far the slot reaches across the bore center;
+                           //   negative = into the bore so the +X wall is fully
+                           //   cut. Stays clear of the -X wall (the hinge).
 
 $fn = 120;
 
@@ -70,17 +74,18 @@ module clamp_cuts() {
     cx = tool_od / 2 - boss_overlap + boss_thk / 2;
     cz = tool_socket_len / 2;
 
-    // Radial slot through cylinder + bosses
-    translate([-tool_od / 2 - 1, -slot_w / 2, -0.1])
-        cube([tool_od + boss_thk + 2, slot_w, tool_socket_len + slot_overshoot]);
+    // Slot: only the +X side. Runs from just past the bore center outward
+    // past the boss outer face. Z stops at the end of the tool socket so it
+    // doesn't bleed into the taper.
+    slot_x_out = tool_od / 2 + boss_thk + 1;
+    translate([slot_inner_x, -slot_w / 2, -0.1])
+        cube([slot_x_out - slot_inner_x, slot_w, tool_socket_len + 0.1]);
 
     // Screw clearance along Y
     translate([cx, 0, cz]) rotate([90, 0, 0])
         cylinder(d = screw_d, h = tool_od * 2, center = true);
 
-    // Hex nut trap, opens to -Y face of the -Y boss. The cut starts 0.1mm
-    // outside the boss to guarantee a clean break-through and extends
-    // (nut_thk + 0.4) into the boss to capture the nut with a hair of slop.
+    // Hex nut trap, opens to the -Y face of the -Y boss.
     nut_depth = nut_thk + 0.4;
     nut_y = -(slot_w / 2 + boss_w) - 0.1 + nut_depth / 2;
     translate([cx, nut_y, cz]) rotate([90, 0, 0])

@@ -3,8 +3,9 @@
 Parametric OpenSCAD adapter that joins a Kärcher WD2 shop-vac hose end to a
 tool with a ~63 mm round dust port.
 
-CI renders preview and axial-cutaway PNGs into the `karcher-wd2-adapter`
-workflow artifact (`build/docs/preview.png`, `build/docs/cutaway.png`).
+CI renders preview, axial-cutaway and through-boss PNGs into the
+`karcher-wd2-adapter` workflow artifact
+(`build/docs/preview.png`, `build/docs/cutaway.png`, `build/docs/boss.png`).
 
 - **WD2 side:** female socket, press-fit on the hose's 34.3 → 35.8 mm taper
   over 50 mm.
