@@ -19,22 +19,35 @@ WINDOW = (1200, 1200)
 
 def render(stl_path: str, out_png: str, mode: str) -> None:
     mesh = pv.read(stl_path)
+    p = pv.Plotter(off_screen=True, window_size=WINDOW)
 
-    if mode == "cutaway":
-        # YZ plane through the axis — keeps the +Y half so the bore opens
-        # toward the camera.
+    if mode == "preview":
+        # 3/4 view from front-right-above.
+        p.camera_position = [
+            (140.0, -170.0, 90.0), (0.0, 0.0, 45.0), (0.0, 0.0, 1.0),
+        ]
+    elif mode == "cutaway":
+        # Half cut along the adapter axis: drop the camera-side half so the
+        # bore, the press-fit taper, the conical reducer, and the slot
+        # extending into the transition all read as a clean cross-section.
+        # clip_closed_surface keeps the half where (point · normal) >= 0,
+        # so normal=(0,1,0) keeps +Y and the cut face at y=0 faces the
+        # camera sitting at -Y.
         mesh = mesh.clip_closed_surface(
-            normal=(0.0, -1.0, 0.0), origin=(0.0, 0.0, 0.0)
+            normal=(0.0, 1.0, 0.0), origin=(0.0, 0.0, 0.0)
         )
-    elif mode != "preview":
+        p.camera_position = [
+            (35.0, -180.0, 70.0), (0.0, 0.0, 45.0), (0.0, 0.0, 1.0),
+        ]
+    else:
         sys.exit(f"unknown mode: {mode!r}")
 
-    p = pv.Plotter(off_screen=True, window_size=WINDOW)
     p.add_mesh(mesh, color=BODY_COLOR, ambient=0.25, diffuse=0.75, specular=0.1)
 
-    # 3/4 view: front-right-above, aimed at the middle of the part.
-    p.camera_position = [(110.0, -130.0, 75.0), (0.0, 0.0, 45.0), (0.0, 0.0, 1.0)]
+    # Lock orthographic framing wide enough that the whole 90 mm part fits
+    # with comfortable margin on all sides.
     p.enable_parallel_projection()
+    p.camera.parallel_scale = 80
 
     p.screenshot(out_png, transparent_background=True)
 
