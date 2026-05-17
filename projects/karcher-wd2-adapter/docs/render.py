@@ -10,10 +10,31 @@ import pyvista as pv
 
 BODY_COLOR = "steelblue"
 WINDOW = (1200, 1200)
+AXIS_LEN = 50
+AXIS_COLORS = {"X": "crimson", "Y": "forestgreen", "Z": "royalblue"}
 
 # Z height of the boss centerline — pulled from wd2_adapter.scad so the
 # through-boss cut slices exactly through the screw axis.
-BOSS_CENTER_Z = 11.0
+BOSS_CENTER_Z = 5.0
+
+
+def add_axes(p: pv.Plotter) -> None:
+    """Draw X / Y / Z lines from the origin with end labels, plus an origin
+    marker. Helps the user reference coordinates when commenting on a render.
+    """
+    for axis, end in [
+        ("X", (AXIS_LEN, 0, 0)),
+        ("Y", (0, AXIS_LEN, 0)),
+        ("Z", (0, 0, AXIS_LEN)),
+    ]:
+        color = AXIS_COLORS[axis]
+        p.add_mesh(pv.Line((0, 0, 0), end), color=color, line_width=4)
+        p.add_point_labels(
+            [end], [axis],
+            font_size=28, text_color=color, bold=True,
+            shape=None, show_points=False, always_visible=True,
+        )
+    p.add_mesh(pv.Sphere(radius=1.2, center=(0, 0, 0)), color="black")
 
 
 def render(stl_path: str, out_png: str, mode: str) -> None:
@@ -50,6 +71,7 @@ def render(stl_path: str, out_png: str, mode: str) -> None:
         sys.exit(f"unknown mode: {mode!r}")
 
     p.add_mesh(mesh, color=BODY_COLOR, ambient=0.25, diffuse=0.75, specular=0.1)
+    add_axes(p)
 
     p.enable_parallel_projection()
     p.camera.parallel_scale = 80 if mode != "boss" else 32

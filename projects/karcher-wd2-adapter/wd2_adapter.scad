@@ -63,33 +63,36 @@ module bore() {
         cylinder(d1 = wd2_base_id, d2 = wd2_tip_id, h = wd2_taper_len + 0.2);
 }
 
+// Boss sits flush with z=0 (the open end of the tool socket) so the screw
+// is accessible without the conical reducer in the way.
+boss_z_lo = 0;
+boss_cz   = boss_z_lo + boss_h / 2;
+
 module bosses() {
     cx = tool_od / 2 - boss_overlap + boss_thk / 2;
-    cz = tool_socket_len / 2;
     for (s = [-1, 1])
-        translate([cx, s * (slot_w / 2 + boss_w / 2), cz])
+        translate([cx, s * (slot_w / 2 + boss_w / 2), boss_cz])
             cube([boss_thk, boss_w, boss_h], center = true);
 }
 
 module clamp_cuts() {
     cx = tool_od / 2 - boss_overlap + boss_thk / 2;
-    cz = tool_socket_len / 2;
 
     // Slot: only the +X side, only across the boss axial range. The cylinder
-    // wall above and below the ear stays intact, so suction-side leak path
-    // is limited to a 10 mm band.
+    // wall above the ear stays intact, so the suction-side leak path is
+    // limited to the boss_h band at the bottom of the socket.
     slot_x_out = tool_od / 2 + boss_thk + 1;
-    translate([slot_inner_x, -slot_w / 2, cz - boss_h / 2])
-        cube([slot_x_out - slot_inner_x, slot_w, boss_h]);
+    translate([slot_inner_x, -slot_w / 2, boss_z_lo - 0.1])
+        cube([slot_x_out - slot_inner_x, slot_w, boss_h + 0.1]);
 
     // Screw clearance along Y
-    translate([cx, 0, cz]) rotate([90, 0, 0])
+    translate([cx, 0, boss_cz]) rotate([90, 0, 0])
         cylinder(d = screw_d, h = tool_od * 2, center = true);
 
     // Hex nut trap, opens to the -Y face of the -Y boss.
     nut_depth = nut_thk + 0.4;
     nut_y = -(slot_w / 2 + boss_w) - 0.1 + nut_depth / 2;
-    translate([cx, nut_y, cz]) rotate([90, 0, 0])
+    translate([cx, nut_y, boss_cz]) rotate([90, 0, 0])
         cylinder(d = nut_af / cos(30) + 0.3, h = nut_depth,
                  $fn = 6, center = true);
 }
