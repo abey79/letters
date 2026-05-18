@@ -12,7 +12,7 @@ wd2_interference = 0.10;   // socket ID undersize for press fit
 
 // ---- Tool port (62.5-63.2 over 16mm) ----
 tool_d_max       = 63.2;
-tool_clearance   = 0.30;   // pre-clamp slip fit
+tool_clearance   = 0.07;   // 1/3 of the 0.7mm tool spread; was 0.30 (too loose)
 tool_socket_len  = 22;     // a bit longer than the 16mm port
 
 // ---- Walls / transition ----
@@ -22,6 +22,8 @@ transition_len   = 18;
 
 // ---- Clamp ----
 slot_w           = 2.5;
+slot_top_inset   = 3.5;    // unslotted wall band at the top of the slot — seals
+                           //   the suction path so the clamp gap doesn't leak
 screw_d          = 3.4;    // M3 clearance
 nut_af           = 5.5;    // M3 hex across-flats
 nut_thk          = 2.4;
@@ -49,19 +51,22 @@ z_vac   = z_trans + transition_len;
 
 module body() {
     cylinder(d = tool_od, h = tool_socket_len);
+    // Transition narrows from the tool OD down to the WD2 socket's deep end.
     translate([0, 0, z_trans])
-        cylinder(d1 = tool_od, d2 = wd2_base_od, h = transition_len);
+        cylinder(d1 = tool_od, d2 = wd2_tip_od, h = transition_len);
+    // WD2 socket: narrow at the deep end (where the hose tip rests), wide at
+    // the open end (where the hose base section sits when fully inserted).
     translate([0, 0, z_vac])
-        cylinder(d1 = wd2_base_od, d2 = wd2_tip_od, h = wd2_taper_len);
+        cylinder(d1 = wd2_tip_od, d2 = wd2_base_od, h = wd2_taper_len);
 }
 
 module bore() {
     translate([0, 0, -0.1])
         cylinder(d = tool_id, h = tool_socket_len + 0.1);
     translate([0, 0, z_trans - 0.01])
-        cylinder(d1 = tool_id, d2 = wd2_base_id, h = transition_len + 0.02);
+        cylinder(d1 = tool_id, d2 = wd2_tip_id, h = transition_len + 0.02);
     translate([0, 0, z_vac - 0.01])
-        cylinder(d1 = wd2_base_id, d2 = wd2_tip_id, h = wd2_taper_len + 0.2);
+        cylinder(d1 = wd2_tip_id, d2 = wd2_base_id, h = wd2_taper_len + 0.2);
 }
 
 // Boss sits flush with z=0 (the open end of the tool socket) so the screw
@@ -79,13 +84,13 @@ module bosses() {
 module clamp_cuts() {
     cx = tool_od / 2 - boss_overlap + boss_thk / 2;
 
-    // Slot: only the +X side. Runs the full tool-socket height (the boss
-    // only clamps the bottom 10 mm, but the wall slit extends up to the
-    // start of the conical transition — easier to print and lets the wall
-    // flex along its full length).
+    // Slot: only the +X side. Stops `slot_top_inset` short of the top of
+    // the tool socket so a continuous wall band seals the suction path
+    // (otherwise a 2.5 mm gap would vent the bore to atmosphere).
     slot_x_out = tool_od / 2 + boss_thk + 1;
     translate([slot_inner_x, -slot_w / 2, -0.1])
-        cube([slot_x_out - slot_inner_x, slot_w, tool_socket_len + 0.1]);
+        cube([slot_x_out - slot_inner_x, slot_w,
+              tool_socket_len - slot_top_inset + 0.1]);
 
     // Screw clearance along Y
     translate([cx, 0, boss_cz]) rotate([90, 0, 0])
