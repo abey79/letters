@@ -4,16 +4,31 @@ letters := "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z"
 jobs := `nproc 2>/dev/null || echo 4`
 openscad := env_var_or_default("OPENSCAD", `command -v openscad 2>/dev/null || command -v OpenSCAD 2>/dev/null || echo /Applications/OpenSCAD.app/Contents/MacOS/OpenSCAD`)
 
-# Render all 26 3MFs into `build/` in parallel.
+# Render all 26 letters as STL pairs (body + outside) into `build/`.
 default: all
 
 all:
     @mkdir -p {{out}}
-    @echo "Rendering 26 letters with up to {{jobs}} parallel jobs..."
+    @echo "Rendering 26 letters as STL pairs with up to {{jobs}} parallel jobs..."
     @echo {{letters}} | tr ' ' '\n' | xargs -P{{jobs}} -I{} just one {}
 
-# Render a single letter (both bodies in one 3MF): `just one A`
+# Render a single letter as an STL pair (body + outside): `just one A`
 one letter:
+    @mkdir -p {{out}}
+    @echo "  {{letter}} -> {{out}}/letter_{{letter}}_{body,outside}.stl"
+    @{{openscad}} -q -o {{out}}/letter_{{letter}}_body.stl \
+        -D 'letter="{{letter}}"' -D 'part="body"' {{scad}}
+    @{{openscad}} -q -o {{out}}/letter_{{letter}}_outside.stl \
+        -D 'letter="{{letter}}"' -D 'part="outside"' {{scad}}
+
+# Render all 26 3MFs (combined body + outside, color-tagged) into `build/`.
+mf3:
+    @mkdir -p {{out}}
+    @echo "Rendering 26 letters as 3MFs with up to {{jobs}} parallel jobs..."
+    @echo {{letters}} | tr ' ' '\n' | xargs -P{{jobs}} -I{} just one-mf3 {}
+
+# Render a single letter as a combined 3MF: `just one-mf3 A`
+one-mf3 letter:
     @mkdir -p {{out}}
     @echo "  {{letter}} -> {{out}}/letter_{{letter}}.3mf"
     @{{openscad}} -q --enable=lazy-union -o {{out}}/letter_{{letter}}.3mf \

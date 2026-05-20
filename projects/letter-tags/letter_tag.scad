@@ -34,11 +34,15 @@ color_layers = 3;      // letter-color layers; recess depth = layer_height * thi
 tile_height  = 6;      // total tile thickness, base bottom -> top face
 
 /* [Magnets] */
-add_magnets         = true;
-magnet_d            = 6.5;   // hole diameter; canonical loose fit (glue) per kennetek
-magnet_h            = 2.0;   // 6 x 2 mm neodymium magnet thickness
-magnet_pos          = 13;    // center offset from tile center (= 8 mm from 42 mm grid edge)
-magnet_cover_layers = 2;     // layers between magnet and baseplate
+add_magnets             = true;
+magnet_d                = 5.85;  // inscribed dia at bump tips (reduce for tighter, increase for looser; nominal magnet is 6.0)
+magnet_h                = 2.0;   // 6 x 2 mm neodymium magnet thickness
+magnet_pos              = 13;    // center offset from tile center (= 8 mm from 42 mm grid edge)
+magnet_cover_layers     = 2;     // layers between magnet and baseplate
+magnet_clearance_layers = 1;     // extra pocket headroom above magnet (absorbs bridge sag + magnet thickness tolerance)
+magnet_bumps            = 3;     // press-fit bumps inside pocket wall; localized contact tolerates FDM wall variation
+magnet_bump_protrusion  = 0.3;   // each bump protrudes this far into the cavity (radial mm); cavity dia = magnet_d + 2*this
+magnet_bump_chamfer     = 0.6;   // bump entry chamfer height (mm) — eases magnet insertion
 
 /* [Gridfinity 1x1 base, official spec] */
 gf_outer      = 41.5;
@@ -82,12 +86,31 @@ module gf_base() {
     }
 }
 
+module magnet_pocket(hole_r, h, bump_r, bumps, chamfer) {
+    // Cavity = big cylinder with `bumps` press-fit ribs protruding inward
+    // from the wall. Bumps taper from a point at z=0 (the side the magnet
+    // enters from during the print pause) to full radius over `chamfer` mm.
+    difference() {
+        cylinder(h = h, r = hole_r);
+        for (i = [0 : bumps - 1])
+            rotate([0, 0, i * 360 / bumps])
+                translate([hole_r, 0, 0]) {
+                    cylinder(h = chamfer, r1 = 0, r2 = bump_r);
+                    translate([0, 0, chamfer])
+                        cylinder(h = h - chamfer + 0.01, r = bump_r);
+                }
+    }
+}
+
 module magnet_pockets() {
     // Pockets are encapsulated: magnet_ceiling of solid plastic sits between
     // the magnet and the base bottom (the face touching the baseplate).
+    pocket_h = magnet_h + magnet_clearance_layers * layer_height;
+    hole_r   = magnet_d / 2 + magnet_bump_protrusion;
     for (sx = [-1, 1]) for (sy = [-1, 1])
         translate([sx * magnet_pos, sy * magnet_pos, magnet_ceiling])
-            cylinder(h = magnet_h + 0.1, d = magnet_d);
+            magnet_pocket(hole_r, pocket_h, magnet_bump_protrusion,
+                          magnet_bumps, magnet_bump_chamfer);
 }
 
 module raw_tile() {
@@ -122,8 +145,8 @@ module outside() {
 }
 
 // Preview-only colors; ignored by STL export.
-body_color    = "WhiteSmoke";
-outside_color = "Crimson";
+body_color    = "Crimson";
+outside_color = "Black";
 
 if (part == "all") {
     color(body_color)    body();

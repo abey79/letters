@@ -13,8 +13,8 @@ import sys
 
 import pyvista as pv
 
-BODY_COLOR = "whitesmoke"
-OUTSIDE_COLOR = "crimson"
+BODY_COLOR = "crimson"
+OUTSIDE_COLOR = "black"
 WINDOW = (1200, 1200)
 
 
@@ -36,8 +36,12 @@ def render(body_stl: str, outside_stl: str, out_png: str, mode: str) -> None:
     p.add_mesh(body, color=BODY_COLOR, ambient=0.25, diffuse=0.75, specular=0.1)
     p.add_mesh(outside, color=OUTSIDE_COLOR, ambient=0.25, diffuse=0.75, specular=0.1)
 
-    # 3/4 view from the front-left-above so the cutaway face is visible.
-    p.camera_position = [(50.0, -75.0, 55.0), (0.0, 0.0, 3.0), (0.0, 0.0, 1.0)]
+    # 3/4 view from front-left-above. For cutaway, tilt closer to the cut
+    # plane (smaller X offset, lower Z) so the exposed face shows more area.
+    if mode == "cutaway":
+        p.camera_position = [(25.0, -85.0, 45.0), (0.0, 0.0, 3.0), (0.0, 0.0, 1.0)]
+    else:
+        p.camera_position = [(50.0, -75.0, 55.0), (0.0, 0.0, 3.0), (0.0, 0.0, 1.0)]
     p.enable_parallel_projection()
 
     p.screenshot(out_png, transparent_background=True)
