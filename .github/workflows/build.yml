@@ -9,6 +9,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [letter-tags, karcher-wd2-adapter]
     steps:
       - uses: actions/checkout@v4
 
@@ -34,12 +38,20 @@ jobs:
           sudo ln -sf /opt/openscad/AppRun /usr/local/bin/openscad
           openscad --version
 
-      - name: Render all letters
+      - name: Install uv
+        uses: astral-sh/setup-uv@v3
+
+      - name: Render ${{ matrix.project }}
+        working-directory: projects/${{ matrix.project }}
         run: just all
 
-      - name: Upload 3MFs
+      - name: Render docs for ${{ matrix.project }}
+        working-directory: projects/${{ matrix.project }}
+        run: just docs
+
+      - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: letter-3mfs
-          path: build/*.3mf
+          name: ${{ matrix.project }}
+          path: projects/${{ matrix.project }}/build/**
           if-no-files-found: error
